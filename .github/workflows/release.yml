@@ -63,7 +63,7 @@ jobs:
           prerelease: false
       - name: Upload Release Asset-MacOS
         id: upload-release-asset-MacOS
-        uses: actions/upload-release-asset-MacOS@v1
+        uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
