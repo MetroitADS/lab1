@@ -52,7 +52,7 @@ jobs:
       - run: cmake --build . --target test
       - run: cmake --build . --target package
       - name: Create Release-MacOS
-        id: create_release--MacOS
+        id: create_release-MacOS
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,13 +61,13 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset--MacOS
-        id: upload-release-asset--MacOS
-        uses: upload-release-asset--MacOS@v1
+      - name: Upload Release Asset-MacOS
+        id: upload-release-asset-MacOS
+        uses: upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release--MacOS.outputs.upload_url }}
+          upload_url: ${{ steps.create_release-MacOS.outputs.upload_url }}
           asset_path: ./helloworld-0.0.${{ github.run_number }}-MacOS.zip
           asset_name: helloworld-0.0.${{ github.run_number }}-MacOS.zip
           asset_content_type: application/zip
