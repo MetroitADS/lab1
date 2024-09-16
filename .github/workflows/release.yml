@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-release-MacOS:
-    runs-on: MacOS-14
+    runs-on: macos-13-large
     permissions: write-all
     steps:
       - uses: actions/checkout@v3
