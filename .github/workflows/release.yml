@@ -54,6 +54,13 @@ jobs:
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
+      - name: Check existing tag
+        id: check_tag
+        run: |
+          if git tag | grep -q "v${{ github.run_number }}"; then
+            echo "Tag already exists. Exiting."
+            exit 1
+          fi
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -73,4 +80,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb # Путь к файлу для Ubuntu
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb # Имя файла для Ubuntu
-          asset_content_type: application/vnd.debian.binary-package
+          asset_content_type: application/octet-stream
