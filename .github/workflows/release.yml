@@ -11,84 +11,52 @@ permissions:
   packages: write
 
 jobs:
-  build_macos:
-    runs-on: macos-latest
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - run: brew update && brew install boost
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build .
-      - run: cmake --build . --target test
-      - run: cmake --build . --target package
-      - run: ls -la
-      - run: find . -name "*.pkg"
       
-      # Проверка существования тега
-      - name: Check if tag already exists
-        id: check_tag
+      # Установка зависимостей
+      - name: Install Dependencies
         run: |
-          TAG_EXISTS=$(git ls-remote --tags origin | grep "refs/tags/v${{ github.run_number }}" || echo "")
-          echo "TAG_EXISTS=$TAG_EXISTS" >> $GITHUB_ENV
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            sudo apt-get update && sudo apt-get install libboost-test-dev -y
+          else
+            brew update && brew install boost
+          fi
+      
+      # Сборка проекта
+      - name: Build Project
+        run: |
+          cmake . -DPATCH_VERSION=${{ github.run_number }}
+          cmake --build .
+      
+      # Тестирование
+      - name: Run Tests
+        run: cmake --build . --target test
+      
+      # Создание пакета
+      - name: Create Package
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            cpack -G DEB
+          else
+            cpack -G RPM # Или другой формат для macOS, если необходимо
+          fi
 
-      # Создание релиза
-      - name: Create Release
-        id: create_release
-        if: env.TAG_EXISTS == ''
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          draft: false
-          prerelease: false
-
-      # Загрузка Release Asset
-      - name: Upload Release Asset
-        id: upload-release-asset
-        if: steps.create_release.outcome == 'success'  # Условие для проверки успешности создания релиза
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg
-          asset_content_type: application/octet-stream
-
-  build_ubuntu:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build .
-
-      # Создание Debian Package
-      - name: Create Debian Package
-        run: cpack -G DEB
-
-      # Проверка наличия .deb файла
-      - name: Verify .deb file creation
+      # Проверка наличия созданного пакета
+      - name: Check for Package
         run: |
           echo "Current directory contents:"
           ls -la ./
-          echo "Searching for .deb files:"
-          find . -name "*.deb"
-
-      # Проверка существования .deb файла
-      - name: Check if .deb file exists
-        run: |
-          if [ -f ./helloworld-0.0.${{ github.run_number }}-Linux.deb ]; then
-            echo ".deb file exists."
-          else
-            echo ".deb file does not exist!"
-            exit 1
-          fi
+          echo "Searching for packages:"
+          find . -name "*.pkg" -o -name "*.deb"
 
       # Проверка существования тега
       - name: Check if tag already exists
@@ -110,10 +78,10 @@ jobs:
           draft: false
           prerelease: false
 
-      # Загрузка Release Asset
-      - name: Upload Release Asset
-        id: upload-release-asset
-        if: steps.create_release.outcome == 'success'  # Условие для проверки успешности создания релиза
+      # Загрузка Release Asset для Linux
+      - name: Upload Linux Release Asset
+        id: upload-linux-asset
+        if: steps.create_release.outcome == 'success' && runner.os == 'Linux'
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -121,4 +89,17 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/octet-stream
+
+      # Загрузка Release Asset для macOS
+      - name: Upload macOS Release Asset
+        id: upload-macos-asset
+        if: steps.create_release.outcome == 'success' && runner.os == 'macOS'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg
           asset_content_type: application/octet-stream
