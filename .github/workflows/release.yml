@@ -29,7 +29,7 @@ jobs:
       
       # Use CPack to create the package
       - name: Create macOS Package
-        run: cpack -G PKG
+        run: cpack -G productbuild
       
       # Verify if the .pkg file is created
       - name: Verify .pkg file creation
