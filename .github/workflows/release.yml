@@ -19,14 +19,16 @@ jobs:
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
+      - run: ls -la          # Отобразить список файлов в текущем каталоге
+      - run: find . -name "*.pkg" # Найти все .pkg файлы в проекте
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }} # Используем формат тега
-          release_name: Release v${{ github.run_number }} # Используем формат названия релиза
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
           draft: false
           prerelease: false
       - name: Upload Release Asset
@@ -36,7 +38,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-macos.pkg # Путь к вашему пакету для macOS
-          asset_name: helloworld-0.0.${{ github.run_number }}-macos.pkg # Имя вашего пакета для macOS
-          asset_content_type: application/octet-stream # Укажите подходящий MIME тип для вашего пакета
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Измените на правильное имя
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Измените на правильное имя
+          asset_content_type: application/octet-stream
 
