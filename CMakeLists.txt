@@ -53,7 +53,7 @@ install(TARGETS helloworld
 )
 
 # Установка пакета
-set(CPACK_GENERATOR "DEB;DragNDrop") # Добавьте 'DEB' для Ubuntu и оставьте 'productbuild' для macOS
+set(CPACK_GENERATOR "DEB;DragNDrop") # Это должно работать на macOS для создания .pkg
 
 # Задание переменных CPACK
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
