@@ -40,8 +40,8 @@ endif()
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
 
-# Настройка генераторов пакетов для обеих платформ
-set(CPACK_GENERATOR "productbuild;DEB")
+# Настройка генератора пакетов для обеих платформ
+set(CPACK_GENERATOR "DEB;productbuild")  # Теперь используем и DEB и productbuild
 
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_CONTACT "example@example.com")
