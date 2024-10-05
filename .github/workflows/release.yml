@@ -54,9 +54,12 @@ jobs:
       - run: cmake --build .
       - run: cmake --build . --target package
       
-      # Verify the package creation
-      - name: List files
-        run: ls -la ./  # Adjust path if necessary to check specific directories
+      # Verify .deb file is created
+      - name: Verify .deb file
+        run: |
+          ls -la ./
+          echo "Looking for .deb files:"
+          find . -name "*.deb"
       
       - name: Create Release
         id: create_release
@@ -76,6 +79,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.90-Linux.deb  # Adjust this based on where the file is located
+          asset_path: ./helloworld-0.0.90-Linux.deb  # Change if necessary based on previous checks
           asset_name: helloworld-0.0.90-Linux.deb
           asset_content_type: application/octet-stream
