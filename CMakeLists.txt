@@ -40,14 +40,8 @@ endif()
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
 
-# Настройка генератора пакетов для обеих платформ
-if(UNIX AND NOT APPLE)
-    set(CPACK_GENERATOR "DEB;ZIP")  # DEB для Linux и ZIP для других платформ
-elseif(APPLE)
-    set(CPACK_GENERATOR "productbuild;ZIP")  # productbuild для macOS
-elseif(WIN32)
-    set(CPACK_GENERATOR "NSIS")  # NSIS для Windows
-endif()
+# Настройка генераторов пакетов для обеих платформ
+set(CPACK_GENERATOR "DEB;productbuild")
 
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
 set(CPACK_PACKAGE_CONTACT "example@example.com")
