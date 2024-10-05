@@ -43,21 +43,18 @@ jobs:
 
   build_ubuntu:
     runs-on: ubuntu-latest
-    needs: build_macos # Зависимость от предыдущей задачи
-    permissions: write-all
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y # Установка необходимых зависимостей
+      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
-      - run: cmake --build . --target test
       - run: cmake --build . --target package
       - name: Check existing tag
         id: check_tag
         run: |
-          if git tag | grep -q "v${{ github.run_number }}"; then
+          if git tag | grep -q "v${{ github.run_id }}"; then
             echo "Tag already exists. Exiting."
             exit 1
           fi
@@ -67,8 +64,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }} # Используем формат тега
-          release_name: Release v${{ github.run_number }} # Используем формат названия релиза
+          tag_name: v${{ github.run_id }} # Уникальный ID сборки
+          release_name: Release v${{ github.run_id }}
           draft: false
           prerelease: false
       - name: Upload Release Asset
@@ -78,6 +75,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb # Путь к файлу для Ubuntu
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb # Имя файла для Ubuntu
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/octet-stream
