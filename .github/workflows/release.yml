@@ -24,18 +24,8 @@ jobs:
       - run: cmake --build . --target package
       - run: ls -la
       - run: find . -name "*.pkg"
-      
-      # Проверка существования тега
-      - name: Check if tag already exists
-        id: check_tag
-        run: |
-          TAG_EXISTS=$(git ls-remote --tags origin | grep "refs/tags/v${{ github.run_number }}" || echo "")
-          echo "TAG_EXISTS=$TAG_EXISTS" >> $GITHUB_ENV
-
-      # Создание релиза
       - name: Create Release
         id: create_release
-        if: env.TAG_EXISTS == ''
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -44,7 +34,6 @@ jobs:
           release_name: Release v${{ github.run_number }}
           draft: false
           prerelease: false
-
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -66,11 +55,9 @@ jobs:
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
 
-      # Создание Debian Package
       - name: Create Debian Package
         run: cpack -G DEB
 
-      # Проверка наличия .deb файла
       - name: Verify .deb file creation
         run: |
           echo "Current directory contents:"
@@ -78,7 +65,6 @@ jobs:
           echo "Searching for .deb files:"
           find . -name "*.deb"
 
-      # Проверка существования .deb файла
       - name: Check if .deb file exists
         run: |
           if [ -f ./helloworld-0.0.${{ github.run_number }}-Linux.deb ]; then
@@ -88,17 +74,8 @@ jobs:
             exit 1
           fi
 
-      # Проверка существования тега
-      - name: Check if tag already exists
-        id: check_tag
-        run: |
-          TAG_EXISTS=$(git ls-remote --tags origin | grep "refs/tags/v${{ github.run_number }}" || echo "")
-          echo "TAG_EXISTS=$TAG_EXISTS" >> $GITHUB_ENV
-
-      # Создание релиза
       - name: Create Release
         id: create_release
-        if: env.TAG_EXISTS == ''
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
