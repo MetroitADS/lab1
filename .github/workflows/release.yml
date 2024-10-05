@@ -1,4 +1,4 @@
-name: CI
+name: Build and Release
 
 on:
   push:
@@ -11,62 +11,43 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: 
-          - ubuntu-latest
-          - macos-latest
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
-      - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1
-        with:
-          cmake-version: '3.21.0' # Замените на нужную версию CMake
 
-      - name: Install dependencies
+      - name: Set up dependencies
         run: |
           if [[ "${{ runner.os }}" == "Linux" ]]; then
-            sudo apt-get update && sudo apt-get install -y libboost-dev
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            brew install boost
+            sudo apt-get update
+            sudo apt-get install -y cmake g++ libboost-all-dev
+          else
+            brew install cmake boost
           fi
 
       - name: Build project
         run: |
-          mkdir build
-          cd build
-          cmake .. -DPATCH_VERSION=${{ github.run_number }}
+          mkdir build && cd build
+          cmake ..
           cmake --build .
 
-      - name: Package application
+      - name: Package the application
         run: |
           cd build
           if [[ "${{ runner.os }}" == "Linux" ]]; then
             cpack -G DEB
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+          else
             cpack -G productbuild
           fi
 
-      - name: List packages
-        run: ls build/*.deb build/*.pkg
-
-      - name: Create Release
-        id: create_release
-        run: |
-          TAG_NAME="v${{ github.run_number }}"
-          echo "Creating release $TAG_NAME"
-          gh release create $TAG_NAME \
-            build/*.deb build/*.pkg \
-            --title "$TAG_NAME" \
-            --notes "Release notes for version $TAG_NAME"
-
       - name: Upload Release Assets
+        if: success()
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
           files: |
-            build/*.deb
-            build/*.pkg
+            build/*-Linux.deb
+            build/*-macOS.pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
