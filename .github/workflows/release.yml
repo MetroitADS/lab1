@@ -39,14 +39,23 @@ jobs:
           release_name: Release v${{ github.run_number }} 
           draft: false
           prerelease: false
+      - name: Get Upload URL
+        id: get_upload_url
+        run: |
+          TAG="v${{ github.run_number }}"
+          if [ "${{ env.exists }}" == "true" ]; then
+            RELEASE_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG")
+            echo "$RELEASE_INFO" | jq -r '.upload_url' | sed "s/{?name,label}//" > upload_url.txt
+            echo "upload_url=$(cat upload_url.txt)" >> $GITHUB_ENV
+          else
+            echo "upload_url=${{ steps.create_release_macos.outputs.upload_url }}" >> $GITHUB_ENV
+          fi
       - name: Upload Release Asset (macOS)
-        id: upload-release-asset-macos
-        if: env.exists == 'false'  # «агрузите актив только если релиз был создан
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release_macos.outputs.upload_url }}
+          upload_url: ${{ env.upload_url }}
           asset_path: ./helloworld-0.0.${{ github.run_number }}-MacOS.pkg
           asset_name: helloworld-0.0.${{ github.run_number }}-MacOS.pkg
           asset_content_type: application/octet-stream
