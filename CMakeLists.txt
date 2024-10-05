@@ -60,7 +60,7 @@ endif()
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
 
 if(APPLE)
-    set(CPACK_GENERATOR "ZIP")
+    set(CPACK_GENERATOR "productbuild")
     set(CPACK_PACKAGE_EXECUTABLES "helloworld_cli;HelloWorld CLI")
 elseif(UNIX)
     set(CPACK_GENERATOR "DEB")
