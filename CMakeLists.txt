@@ -17,6 +17,7 @@ set_target_properties(helloworld_cli helloworld test_version PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
+
 target_include_directories(helloworld PRIVATE "${CMAKE_BINARY_DIR}")
 
 set_target_properties(test_version PROPERTIES
@@ -39,10 +40,11 @@ endif()
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
 
+# Настройка генератора пакетов
 if(APPLE)
-    set(CPACK_GENERATOR "productbuild")
+    set(CPACK_GENERATOR "productbuild;ZIP")  # productbuild для macOS и ZIP для остальных платформ
 elseif(UNIX)
-    set(CPACK_GENERATOR "DEB")
+    set(CPACK_GENERATOR "DEB")  # DEB для Linux
 endif()
 
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
