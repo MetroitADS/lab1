@@ -40,18 +40,16 @@ endif()
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
 
-# CPack Configuration
-set(CPACK_PACKAGE_NAME "helloworld")
-set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
-set(CPACK_PACKAGE_CONTACT "example@example.com")
-
-
 # Настройка генератора пакетов
 if(APPLE)
     set(CPACK_GENERATOR "productbuild")  # productbuild для macOS и ZIP для остальных платформ
 elseif(UNIX)
     set(CPACK_GENERATOR "DEB")  # DEB для Linux
 endif()
+
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_CONTACT "example@example.com")
+
 include(CPack)
 
 enable_testing()

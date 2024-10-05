@@ -5,11 +5,9 @@ on:
     branches:
       - main
       - feature/github_actions
-      
 permissions:
   contents: write
   packages: write
-  
 jobs:
   build_macos:
     runs-on: macos-latest
@@ -18,27 +16,13 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-          
       - run: brew update && brew install boost # Установка Boost через Homebrew
-      
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      
       - run: cmake --build .
-      
       - run: cmake --build . --target test
-      
-      # Use CPack to create the package
-      - name: Create macOS Package
-        run: cpack -G productbuild
-      
-      # Verify if the .pkg file is created
-      - name: Verify .pkg file creation
-        run: |
-          echo "Current directory contents:"
-          ls -la ./
-          echo "Searching for .pkg files:"
-          find . -name "*.pkg"
-      
+      - run: cmake --build . --target package
+      - run: ls -la # Отобразить список файлов в текущем каталоге
+      - run: find . -name "*.pkg" # Найти все .pkg файлы в проекте
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -49,7 +33,6 @@ jobs:
           release_name: Release v${{ github.run_number }} # Используем формат названия релиза
           draft: false
           prerelease: false
-          
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -57,21 +40,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-macOS.pkg # Путь к файлу для macOS
-          asset_name: helloworld-0.0.${{ github.run_number }}-macOS.pkg # Имя файла для macOS
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Путь к файлу для macOS
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Имя файла для macOS
           asset_content_type: application/octet-stream
-          
   build_ubuntu:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
-          
       - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
-      
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      
       - run: cmake --build .
       
       # Run CPack to create the .deb package
