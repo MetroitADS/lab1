@@ -13,6 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
+          tag_name: v1.0.0
           submodules: true
       - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
@@ -46,6 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
+          tag_name: v1.0.1
           submodules: true
       - run: brew install boost 
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
