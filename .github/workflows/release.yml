@@ -45,8 +45,10 @@ jobs:
           draft: false
           prerelease: false
 
+      # Загрузка Release Asset
       - name: Upload Release Asset
         id: upload-release-asset
+        if: steps.create_release.outcome == 'success'  # Условие для проверки успешности создания релиза
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,8 +110,10 @@ jobs:
           draft: false
           prerelease: false
 
+      # Загрузка Release Asset
       - name: Upload Release Asset
         id: upload-release-asset
+        if: steps.create_release.outcome == 'success'  # Условие для проверки успешности создания релиза
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
