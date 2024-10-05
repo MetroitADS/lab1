@@ -62,7 +62,7 @@ jobs:
       - run: cmake --build . --target package
       - name: Create Release (macOS)
         id: create_release_macos
-        uses: actions/create-release@v1
+        uses: actions/create-release@v4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
