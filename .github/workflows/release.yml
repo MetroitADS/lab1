@@ -5,12 +5,59 @@ on:
     branches:
       - main
       - feature/github_actions
+
 permissions:
   contents: write
   packages: write
+
 jobs:
+  build_ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - run: sudo apt-get update && sudo apt-get install libboost-test-dev dpkg-dev -y
+      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
+      - run: cmake --build .
+      
+      # Просмотр файлов перед созданием пакета
+      - name: List files before creating .deb package
+        run: ls -la ./
+      
+      # Создание Debian пакета
+      - name: Create Debian Package
+        run: cpack -G DEB
+      
+      # Проверка наличия .deb файла
+      - name: Verify .deb file creation
+        run: find . -name "*.deb"
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          draft: false
+          prerelease: false
+      
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb  # Проверьте имя
+          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/octet-stream
+  
   build_macos:
     runs-on: macos-latest
+    needs: build_ubuntu  # Задача зависит от завершения build_ubuntu
     permissions: write-all
     steps:
       - uses: actions/checkout@v3
@@ -42,47 +89,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Путь к файлу для macOS
           asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Имя файла для macOS
-          asset_content_type: application/octet-stream
-  build_ubuntu:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - run: sudo apt-get update && sudo apt-get install libboost-test-dev dpkg-dev -y
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build .
-      
-      # Просмотр файлов перед созданием пакета
-      - name: List files before creating .deb package
-        run: ls -la ./
-      
-      # Создание Debian пакета
-      - name: Create Debian Package
-        run: cpack -G DEB
-      
-      # Проверка наличия .deb файла
-      - name: Verify .deb file creation
-        run: find . -name "*.deb"
-      
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_id }}
-          release_name: Release v${{ github.run_id }}
-          draft: false
-          prerelease: false
-      
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb  # Проверьте имя
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/octet-stream
