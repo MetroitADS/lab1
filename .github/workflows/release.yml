@@ -13,10 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          tag_name: v1.0.0
-          release_name: Release v1.0.0
-          draft: false
-          prerelease: false
           submodules: true
       - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
@@ -29,8 +25,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
+          tag_name: v${{ github.run_number }} # Используем формат тега
+          release_name: Release v${{ github.run_number }} # Используем формат названия релиза
           draft: false
           prerelease: false
       - name: Upload Release Asset
@@ -50,11 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          tag_name: ${{ steps.get_latest_tag.outputs.new_tag }}
-          release_name: Release ${{ steps.get_latest_tag.outputs.new_tag }}
-          draft: false
-          prerelease: false
-
+          submodules: true
       - run: brew install boost 
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
@@ -66,8 +58,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
+          tag_name: v${{ github.run_number }} # Используем формат тега
+          release_name: Release v${{ github.run_number }} # Используем формат названия релиза
           draft: false
           prerelease: false
       - name: Upload Release Asset (macOS)
