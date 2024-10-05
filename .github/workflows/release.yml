@@ -42,13 +42,10 @@ jobs:
       - name: Get Upload URL
         id: get_upload_url
         run: |
-          TAG="v${{ github.run_number }}"
-          if [ "${{ env.exists }}" == "true" ]; then
-            RELEASE_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG")
-            echo "$RELEASE_INFO" | jq -r '.upload_url' | sed "s/{?name,label}//" > upload_url.txt
-            echo "upload_url=$(cat upload_url.txt)" >> $GITHUB_ENV
+          if [ -f "./helloworld-0.0.73-MacOS.pkg" ]; then
+            echo "Asset exists."
           else
-            echo "upload_url=${{ steps.create_release_macos.outputs.upload_url }}" >> $GITHUB_ENV
+            echo "Asset does not exist." && exit 1
           fi
       - name: Upload Release Asset (macOS)
         uses: actions/upload-release-asset@v1
