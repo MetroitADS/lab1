@@ -31,7 +31,14 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_ENV
           fi
-      
+      - name: Check if package exists
+        run: |
+          if [ -f ./helloworld-0.0.${{ github.run_number }}-MacOS.pkg ]; then
+            echo "Package exists."
+          else
+            echo "Package does not exist."
+            exit 1
+          fi
       - name: Create Release (macOS)
         id: create_release_macos
         if: env.exists == 'false'  # —оздавайте релиз только если тег не существует
