@@ -27,11 +27,17 @@ jobs:
       
       - run: cmake --build . --target test
       
-      - run: cmake --build . --target package
+      # Use CPack to create the package
+      - name: Create macOS Package
+        run: cpack -G PKG
       
-      - run: ls -la # Отобразить список файлов в текущем каталоге
-      
-      - run: find . -name "*.pkg" # Найти все .pkg файлы в проекте
+      # Verify if the .pkg file is created
+      - name: Verify .pkg file creation
+        run: |
+          echo "Current directory contents:"
+          ls -la ./
+          echo "Searching for .pkg files:"
+          find . -name "*.pkg"
       
       - name: Create Release
         id: create_release
@@ -51,8 +57,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Путь к файлу для macOS
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Имя файла для macOS
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-macOS.pkg # Путь к файлу для macOS
+          asset_name: helloworld-0.0.${{ github.run_number }}-macOS.pkg # Имя файла для macOS
           asset_content_type: application/octet-stream
           
   build_ubuntu:
