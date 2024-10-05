@@ -51,9 +51,8 @@ install(TARGETS helloworld
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
 )
-
 # Установка пакета
-set(CPACK_GENERATOR "DEB;DragNDrop") # Это должно работать на macOS для создания .pkg
+set(CPACK_GENERATOR "DEB;productbuild") # Это должно работать на macOS для создания .pkg
 
 # Задание переменных CPACK
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
