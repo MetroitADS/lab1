@@ -41,6 +41,7 @@ jobs:
           prerelease: false
       - name: Upload Release Asset (macOS)
         id: upload-release-asset-macos
+        if: env.exists == 'false'  # «агрузите актив только если релиз был создан
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
