@@ -47,7 +47,7 @@ jobs:
           if [[ "${{ runner.os }}" == "Linux" ]]; then
             cpack -G DEB
           else
-            cpack -G RPM # Или другой формат для macOS, если необходимо
+            cpack -G productbuild # Или другой формат для macOS, если необходимо
           fi
 
       # Проверка наличия созданного пакета
