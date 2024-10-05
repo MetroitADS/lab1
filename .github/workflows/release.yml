@@ -19,14 +19,24 @@ jobs:
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG="v${{ github.run_number }}"
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+            echo "exists=true" >> $GITHUB_ENV
+          else
+            echo "exists=false" >> $GITHUB_ENV
+          fi
       - name: Create Release (macOS)
         id: create_release_macos
+        if: env.exists == 'false'  # Создавайте релиз только если тег не существует
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }} # Используем формат тега
-          release_name: Release v${{ github.run_number }} # Используем формат названия релиза
+          tag_name: v${{ github.run_number }} 
+          release_name: Release v${{ github.run_number }} 
           draft: false
           prerelease: false
       - name: Upload Release Asset (macOS)
