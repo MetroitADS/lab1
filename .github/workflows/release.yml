@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feature/github_actions
+
 jobs:
   build_macos:
     runs-on: macos-latest
@@ -20,6 +21,7 @@ jobs:
       - run: cmake --build . --target package
       - run: ls -la # Отобразить список файлов в текущем каталоге
       - run: find . -name "*.pkg" # Найти все .pkg файлы в проекте
+      
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -30,8 +32,8 @@ jobs:
           release_name: Release v${{ github.run_number }} # Используем формат названия релиза
           draft: false
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
+
+      - name: Upload Release Asset (macOS)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -51,6 +53,7 @@ jobs:
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
       - run: cmake --build . --target package
+
       - name: Check existing tag
         id: check_tag
         run: |
@@ -58,6 +61,7 @@ jobs:
             echo "Tag already exists. Exiting."
             exit 1
           fi
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -68,8 +72,8 @@ jobs:
           release_name: Release v${{ github.run_id }}
           draft: false
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
+
+      - name: Upload Release Asset (Linux)
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,3 +82,35 @@ jobs:
           asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/octet-stream
+
+  upload_artifacts:
+    runs-on: ubuntu-latest
+    needs: [build_macos, build_ubuntu]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@master
+        with:
+          name: macos
+
+      - name: Download Ubuntu artifact
+        uses: actions/download-artifact@master
+        with:
+          name: ubuntu
+
+      - name: Upload to Release (macOS pkg)
+        uses: JasonEtco/upload-to-release@v0.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg application/octet-stream
+
+      - name: Upload to Release (Linux deb)
+        uses: JasonEtco/upload-to-release@v0.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ./helloworld-0.0.${{ github.run_number }}-Linux.deb application/octet-stream
