@@ -14,73 +14,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      
-      - run: brew install boost 
-      
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build .
-      - run: cmake --build . --target test
-      - run: cmake --build . --target package
-      
-      - name: Check if tag exists
-        id: check_tag
-        run: |
-          TAG="v${{ github.run_number }}"
-          if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
-            echo "exists=true" >> $GITHUB_ENV
-          else
-            echo "exists=false" >> $GITHUB_ENV
-          fi
-      - name: Check if package exists
-        run: |
-          if [ -f ./helloworld-0.0.${{ github.run_number }}-MacOS.pkg ]; then
-            echo "Package exists."
-          else
-            echo "Package does not exist."
-            exit 1
-          fi
-      - name: Create Release (macOS)
-        id: create_release_macos
-        if: env.exists == 'false'  # Создавайте релиз только если тег не существует
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }} 
-          release_name: Release v${{ github.run_number }} 
-          draft: false
-          prerelease: false
-      
-      - name: Get Upload URL
-        id: get_upload_url
-        run: |
-          TAG="v${{ github.run_number }}"
-          if [ "${{ env.exists }}" == "true" ]; then
-            RELEASE_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG")
-            echo "$RELEASE_INFO" | jq -r '.upload_url' | sed "s/{?name,label}//" > upload_url.txt
-            echo "upload_url=$(cat upload_url.txt)" >> $GITHUB_ENV
-          else
-            echo "upload_url=${{ steps.create_release_macos.outputs.upload_url }}" >> $GITHUB_ENV
-          fi
-      
-      - name: Upload Release Asset (macOS)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-MacOS.pkg
-          asset_name: helloworld-0.0.${{ github.run_number }}-MacOS.pkg
-          asset_content_type: application/octet-stream
-
-  build_ubuntu:
-    runs-on: ubuntu-latest
-    permissions: write-all
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
+      - run: brew update && brew install boost # Установка Boost через Homebrew
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
       - run: cmake --build . --target test
@@ -102,6 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_content_type: application/vnd.debian.binary-package
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-macos.pkg # Путь к вашему пакету для macOS
+          asset_name: helloworld-0.0.${{ github.run_number }}-macos.pkg # Имя вашего пакета для macOS
+          asset_content_type: application/octet-stream # Укажите подходящий MIME тип для вашего пакета
+
