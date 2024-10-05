@@ -52,9 +52,12 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
-      - run: cmake --build . --target package
       
-      # Check for .deb file
+      # Run CPack to create the .deb package
+      - name: Create Debian Package
+        run: cpack -G DEB
+      
+      # Verify if the .deb file is created
       - name: Verify .deb file creation
         run: |
           echo "Current directory contents:"
@@ -80,6 +83,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.90-Linux.deb  # Make sure this path is correct
-          asset_name: helloworld-0.0.90-Linux.deb
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb  # Adjust based on actual versioning
+          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/octet-stream
