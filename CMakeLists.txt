@@ -38,13 +38,18 @@ else ()
     target_compile_options(test_version PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
 
+# Установка исполняемых файлов и библиотек
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
+install(TARGETS helloworld LIBRARY DESTINATION lib)
+install(TARGETS test_version RUNTIME DESTINATION bin)
 
 # Настройка генератора пакетов
 if(APPLE)
     set(CPACK_GENERATOR "productbuild")  # productbuild для macOS и ZIP для остальных платформ
 elseif(UNIX)
     set(CPACK_GENERATOR "DEB")  # DEB для Linux
+else()
+    set(CPACK_GENERATOR "ZIP")  # ZIP для Windows
 endif()
 
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
