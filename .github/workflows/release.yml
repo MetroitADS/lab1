@@ -19,9 +19,6 @@ jobs:
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
-      - name: Create ZIP Package
-        run: zip -r ./helloworld-0.0.${{ github.run_number }}-macOS.zip ./path/to/your/output/files/*
-        
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -32,7 +29,6 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
-          
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
