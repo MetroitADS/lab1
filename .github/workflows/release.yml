@@ -1,4 +1,4 @@
-name: 'C++ CI'
+name: CI
 
 on:
   push:
@@ -6,100 +6,67 @@ on:
       - main
       - feature/github_actions
 
-permissions:
-  contents: write
-  packages: write
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: 
+          - ubuntu-latest
+          - macos-latest
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
+      - name: Checkout code
+        uses: actions/checkout@v3
       
-      # Установка зависимостей
-      - name: Install Dependencies
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1
+        with:
+          cmake-version: '3.21.0' # Замените на нужную версию CMake
+
+      - name: Install dependencies
         run: |
           if [[ "${{ runner.os }}" == "Linux" ]]; then
-            sudo apt-get update && sudo apt-get install libboost-test-dev -y
-          else
-            brew update && brew install boost
+            sudo apt-get update && sudo apt-get install -y libboost-dev
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            brew install boost
           fi
-      
-      # Сборка проекта
-      - name: Build Project
+
+      - name: Build project
         run: |
-          cmake . -DPATCH_VERSION=${{ github.run_number }}
+          mkdir build
+          cd build
+          cmake .. -DPATCH_VERSION=${{ github.run_number }}
           cmake --build .
-      
-      # Тестирование
-      - name: Run Tests
-        run: cmake --build . --target test
-      
-      # Создание пакета
-      - name: Create Package
+
+      - name: Package application
         run: |
+          cd build
           if [[ "${{ runner.os }}" == "Linux" ]]; then
             cpack -G DEB
-          else
-            cpack -G productbuild # Или другой формат для macOS, если необходимо
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            cpack -G productbuild
           fi
 
-      # Проверка наличия созданного пакета
-      - name: Check for Package
-        run: |
-          echo "Current directory contents:"
-          ls -la ./
-          echo "Searching for packages:"
-          find . -name "*.pkg" -o -name "*.deb"
+      - name: List packages
+        run: ls build/*.deb build/*.pkg
 
-      # Проверка существования тега
-      - name: Check if tag already exists
-        id: check_tag
-        run: |
-          TAG_EXISTS=$(git ls-remote --tags origin | grep "refs/tags/v${{ github.run_number }}" || echo "")
-          echo "TAG_EXISTS=$TAG_EXISTS" >> $GITHUB_ENV
-
-      # Создание релиза
       - name: Create Release
         id: create_release
-        if: env.TAG_EXISTS == ''
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="v${{ github.run_number }}"
+          echo "Creating release $TAG_NAME"
+          gh release create $TAG_NAME \
+            build/*.deb build/*.pkg \
+            --title "$TAG_NAME" \
+            --notes "Release notes for version $TAG_NAME"
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          draft: false
-          prerelease: false
-
-      # Загрузка Release Asset для Linux
-      - name: Upload Linux Release Asset
-        id: upload-linux-asset
-        if: steps.create_release.outcome == 'success' && runner.os == 'Linux'
-        uses: actions/upload-release-asset@v1
+          files: |
+            build/*.deb
+            build/*.pkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_content_type: application/octet-stream
-
-      # Загрузка Release Asset для macOS
-      - name: Upload macOS Release Asset
-        id: upload-macos-asset
-        if: steps.create_release.outcome == 'success' && runner.os == 'macOS'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg
-          asset_content_type: application/octet-stream
