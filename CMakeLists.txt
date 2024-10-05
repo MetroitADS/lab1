@@ -37,25 +37,13 @@ target_link_libraries(test_version
 )
 
 if (MSVC)
-    target_compile_options(helloworld_cli PRIVATE
-        /W4
-    )
-    target_compile_options(helloworld PRIVATE
-        /W4
-    )
-    target_compile_options(test_version PRIVATE
-        /W4
-    )
+    target_compile_options(helloworld_cli PRIVATE /W4)
+    target_compile_options(helloworld PRIVATE /W4)
+    target_compile_options(test_version PRIVATE /W4)
 else ()
-    target_compile_options(helloworld_cli PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
-    target_compile_options(helloworld PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
-    target_compile_options(test_version PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
+    target_compile_options(helloworld_cli PRIVATE -Wall -Wextra -pedantic -Werror)
+    target_compile_options(helloworld PRIVATE -Wall -Wextra -pedantic -Werror)
+    target_compile_options(test_version PRIVATE -Wall -Wextra -pedantic -Werror)
 endif()
 
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
@@ -65,12 +53,7 @@ install(TARGETS helloworld
 )
 
 # Установка пакета
-if(APPLE)
-    set(CPACK_GENERATOR "productbuild")
-    set(CPACK_PACKAGE_EXECUTABLES "helloworld_cli;HelloWorld CLI")
-elseif(UNIX)
-    set(CPACK_GENERATOR "DEB")
-endif()
+set(CPACK_GENERATOR "DEB;DragNDrop") # Добавьте 'DEB' для Ubuntu и оставьте 'productbuild' для macOS
 
 # Задание переменных CPACK
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
