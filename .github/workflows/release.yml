@@ -86,31 +86,3 @@ jobs:
           asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/octet-stream
-
-  upload_artifacts:
-    runs-on: ubuntu-latest
-    needs: [build_macos, build_ubuntu]
-    steps:
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: macos
-
-      - name: Download Ubuntu artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: ubuntu
-
-      - name: Upload to Release (macOS)
-        uses: JasonEtco/upload-to-release@v0.1.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg application/octet-stream
-
-      - name: Upload to Release (Ubuntu)
-        uses: JasonEtco/upload-to-release@v0.1.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: ./helloworld-0.0.${{ github.run_number }}-Linux.deb application
