@@ -42,7 +42,10 @@ endif()
 install(TARGETS helloworld_cli RUNTIME DESTINATION bin)
 install(TARGETS helloworld LIBRARY DESTINATION lib)
 install(TARGETS test_version RUNTIME DESTINATION bin)
-
+# Настройка генератора пакетов
+set(CPACK_PACKAGE_NAME "helloworld")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_CONTACT "example@example.com")
 # Настройка генератора пакетов
 if(APPLE)
     set(CPACK_GENERATOR "productbuild")  # productbuild для macOS и ZIP для остальных платформ

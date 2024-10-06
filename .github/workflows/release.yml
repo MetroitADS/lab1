@@ -87,7 +87,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          files: ${{ needs.build_macos.outputs.pkg_path }}  # Обращение к выходному значению другого job
+          files: ${{ needs.build_macos.outputs.pkg_path }} 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -95,6 +95,24 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          files: ${{ needs.build_ubuntu.outputs.deb_path }}  # Обращение к выходному значению другого job
+          files: ${{ needs.build_ubuntu.outputs.deb_path }}  
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload source code (zip) to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          files: |
+            path/to/source.zip  # Путь к вашему zip файлу
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload source code (tar.gz) to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          files: |
+            path/to/source.tar.gz  # Путь к вашему tar.gz файлу
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
