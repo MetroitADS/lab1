@@ -22,11 +22,18 @@ jobs:
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
       - run: cmake --build . --target test
-      - run: cmake --build . --target package
+
+      # Создание macOS пакета
+      - name: Package for macOS
+        run: cmake --build . --target package
       
-      # Проверка наличия .pkg файлов
-      - run: ls -la 
-      - run: find . -name "*.pkg"
+      # Проверка наличия .pkg файлов после сборки
+      - name: List .pkg files
+        run: |
+          echo "Current directory contents:"
+          ls -la
+          echo "Searching for .pkg files:"
+          find . -name "*.pkg"
 
       # Создание релиза для macOS
       - name: Create Release
@@ -41,8 +48,8 @@ jobs:
           prerelease: false
 
       # Загрузка артефакта для macOS
-      - name: Upload Release Asset
-        id: upload-release-asset
+      - name: Upload macOS Release Asset
+        id: upload-macos-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,8 +93,8 @@ jobs:
           draft: false
           prerelease: false
       
-      - name: Upload Release Asset
-        id: upload-release-asset
+      - name: Upload Linux Release Asset
+        id: upload-linux-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
