@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup environment
         run: |
@@ -38,7 +38,7 @@ jobs:
           cp *.deb ../ # Копируем пакет в корневой каталог
 
       - name: Upload package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ubuntu-package
           path: ../*.deb
@@ -47,7 +47,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup environment
         run: |
@@ -72,7 +72,7 @@ jobs:
           cp *.pkg ../ # Копируем пакет в корневой каталог
 
       - name: Upload package as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: macos-package
           path: ../*.pkg
@@ -82,7 +82,7 @@ jobs:
     needs: [build_ubuntu, build_macos]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create Release
         id: create_release
