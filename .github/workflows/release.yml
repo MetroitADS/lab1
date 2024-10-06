@@ -1,9 +1,11 @@
-name: Build and Package
+name: Build and Release
 
 on:
   push:
     branches:
       - main
+  release:
+    types: [created]
 
 jobs:
   build_ubuntu:
@@ -33,6 +35,13 @@ jobs:
         run: |
           cd build
           cpack -G DEB || { echo "Package creation failed"; exit 1; }
+          cp *.deb ../ # Копируем пакет в корневой каталог
+
+      - name: Upload package as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ubuntu-package
+          path: ../*.deb
 
   build_macos:
     runs-on: macos-latest
@@ -59,4 +68,49 @@ jobs:
       - name: Package the project
         run: |
           cd build
-          cpack -G productbuild || { echo "Package creation failed"; exit 1; }
+          cpack -G PKG || { echo "Package creation failed"; exit 1; }
+          cp *.pkg ../ # Копируем пакет в корневой каталог
+
+      - name: Upload package as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos-package
+          path: ../*.pkg
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build_ubuntu, build_macos]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }} # Используем тег, к которому произошел push
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Ubuntu package
+        uses: softprops/action-gh-release@v1
+        with:
+          upload_artifact: true
+          asset_path: ../*.deb
+          asset_name: ubuntu-package.deb
+          tag: ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS package
+        uses: softprops/action-gh-release@v1
+        with:
+          upload_artifact: true
+          asset_path: ../*.pkg
+          asset_name: macos-package.pkg
+          tag: ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
