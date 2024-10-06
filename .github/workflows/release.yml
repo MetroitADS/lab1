@@ -68,7 +68,7 @@ jobs:
       - name: Package the project
         run: |
           cd build
-          cpack -G PKG || { echo "Package creation failed"; exit 1; }
+          cpack -G productbuild || { echo "Package creation failed"; exit 1; }
           cp *.pkg ../ # Копируем пакет в корневой каталог
 
       - name: Upload package as artifact
