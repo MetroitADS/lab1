@@ -35,6 +35,16 @@ jobs:
         run: |
           cd build
           cpack -G DEB || { echo "Package creation failed"; exit 1; }
+          
+          # Убедитесь, что ../build_output - это каталог
+          if [ -e ../build_output ]; then
+              if [ ! -d ../build_output ]; then
+                  echo "../build_output exists but is not a directory. Removing it."
+                  rm ../build_output # Удаляем, если это файл
+              fi
+          fi
+          
+          mkdir -p ../build_output # Создаем каталог
           cp *.deb ../build_output/ # Копируем пакет в выходной каталог
 
       - name: Upload package as artifact
