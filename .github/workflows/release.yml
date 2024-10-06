@@ -69,6 +69,7 @@ jobs:
         run: |
           cd build
           cpack -G productbuild || { echo "Package creation failed"; exit 1; }
+          mkdir -p ../build_output # —оздаем каталог, если он не существует
           cp *.pkg ../build_output/ #  опируем пакет в выходной каталог
 
       - name: Upload package as artifact
