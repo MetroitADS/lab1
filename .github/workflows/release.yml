@@ -35,13 +35,13 @@ jobs:
         run: |
           cd build
           cpack -G DEB || { echo "Package creation failed"; exit 1; }
-          cp *.deb ../ # Копируем пакет в корневой каталог
+          cp *.deb ../build_output/ # Копируем пакет в выходной каталог
 
       - name: Upload package as artifact
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-package
-          path: ../*.deb
+          path: build_output/*.deb
 
   build_macos:
     runs-on: macos-latest
@@ -69,13 +69,13 @@ jobs:
         run: |
           cd build
           cpack -G productbuild || { echo "Package creation failed"; exit 1; }
-          cp *.pkg ../ # Копируем пакет в корневой каталог
+          cp *.pkg ../build_output/ # Копируем пакет в выходной каталог
 
       - name: Upload package as artifact
         uses: actions/upload-artifact@v3
         with:
           name: macos-package
-          path: ../*.pkg
+          path: build_output/*.pkg
 
   release:
     runs-on: ubuntu-latest
@@ -95,21 +95,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Ubuntu package
+      - name: Download Ubuntu package
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-package
+          path: ./artifacts
+
+      - name: Upload Ubuntu package to release
         uses: softprops/action-gh-release@v1
         with:
           upload_artifact: true
-          asset_path: ../*.deb
+          asset_path: artifacts/*.deb
           asset_name: ubuntu-package.deb
           tag: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload macOS package
+      - name: Download macOS package
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-package
+          path: ./artifacts
+
+      - name: Upload macOS package to release
         uses: softprops/action-gh-release@v1
         with:
           upload_artifact: true
-          asset_path: ../*.pkg
+          asset_path: artifacts/*.pkg
           asset_name: macos-package.pkg
           tag: ${{ github.ref }}
         env:
