@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   packages: write
+  releases: write  # Разрешение на создание релизов
 
 jobs:
   build_macos:
@@ -38,12 +39,6 @@ jobs:
             echo "::set-output name=pkg_path::$(realpath "$PKG_FILE")"
           fi
 
-      - name: Upload .pkg artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos-package
-          path: ${{ steps.set_pkg_path.outputs.pkg_path }}
-
   build_ubuntu:
     runs-on: ubuntu-latest
     outputs:
@@ -71,8 +66,36 @@ jobs:
             echo "::set-output name=deb_path::$(realpath "$DEB_FILE")"
           fi
 
-      - name: Upload .deb artifact
-        uses: actions/upload-artifact@v3
+  release:
+    needs: [build_macos, build_ubuntu]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
         with:
-          name: ubuntu-package
-          path: ${{ steps.set_deb_path.outputs.deb_path }}
+          tag_name: v${{ github.run_number }}  # Имя тега для релиза
+          release_name: Release ${{ github.run_number }}  # Название релиза
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Токен для доступа к API GitHub
+
+      - name: Upload .pkg artifact to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          files: ${{ jobs.build_macos.outputs.pkg_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload .deb artifact to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.run_number }}
+          files: ${{ jobs.build_ubuntu.outputs.deb_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
