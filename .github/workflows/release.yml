@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: my-macos-package
-          path: ${{ needs.build_macos.outputs.pkg_path }}
+          path: ${{ steps.set_pkg_path.outputs.pkg_path }} # Используйте правильный доступ к выходному значению
 
   build_ubuntu:
     runs-on: ubuntu-latest
@@ -71,8 +71,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: my-ubuntu-package
-          path: ${{ needs.build_ubuntu.outputs.deb_path }}
-
+          path: ${{ steps.set_deb_path.outputs.deb_path }} # Используйте правильный доступ к выходному значению
+  
   upload_artifacts:
     needs: [build_macos, build_ubuntu]
     runs-on: ubuntu-latest
