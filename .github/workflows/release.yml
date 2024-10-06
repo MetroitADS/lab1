@@ -56,10 +56,10 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref }} # Используйте значение тега
+          release_name: Release ${{ github.ref_name }} # Используйте имя тега
           body: |
-            Release notes for version ${{ github.ref }}
+            Release notes for version ${{ github.ref_name }}
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -111,10 +111,10 @@ jobs:
         id: create_release_macos
         uses: actions/create-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref }} # Используйте значение тега
+          release_name: Release ${{ github.ref_name }} # Используйте имя тега
           body: |
-            Release notes for version ${{ github.ref }}
+            Release notes for version ${{ github.ref_name }}
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
