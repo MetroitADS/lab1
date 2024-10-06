@@ -1,17 +1,12 @@
-name: 'C++ CI'
+name: Build and Release
 
 on:
   push:
-    branches:
-      - main
-      - feature/github_actions
-
-permissions:
-  contents: write
-  packages: write
+    tags:
+      - 'v*'  # Запускается при пуше тегов в формате v*
 
 jobs:
-  build:
+  build_macos:
     runs-on: macos-latest
 
     steps:
@@ -56,45 +51,43 @@ jobs:
 
   build_ubuntu:
     runs-on: ubuntu-latest
-    needs: build_macos # Убедитесь, что сборка macOS завершена перед началом сборки Ubuntu
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build .
 
-      # Создание Debian пакета
-      - name: Create Debian Package
-        run: cpack -G DEB
-      
-      # Проверка создания .deb файла
-      - name: Verify .deb file creation
-        run: |
-          echo "Current directory contents:"
-          ls -la ./
-          echo "Searching for .deb files:"
-          find . -name "*.deb"
-      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1.0.2
+        with:
+          cmake-version: '3.20'  # Укажите желаемую версию CMake
+
+      - name: Configure CMake
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build --target package  # Предполагается, что вы настроили CMake для создания пакета
+
+      - name: List files in build directory
+        run: ls -la build  # Проверка наличия созданного пакета
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_id }}
-          release_name: Release v${{ github.run_id }}
+          tag_name: ${{ github.ref }}  # Использует тег из события
+          release_name: Release ${{ github.ref }}  # Название релиза
           draft: false
           prerelease: false
-      
-      - name: Upload Linux Release Asset
-        id: upload-linux-asset
+
+      - name: Upload Ubuntu Release Asset
+        id: upload-ubuntu-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ./build/helloworld-0.0.${{ github.run_number }}-Linux.deb  # Проверьте правильность имени файла
+          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb  # Имя файла .deb для Ubuntu
           asset_content_type: application/octet-stream
