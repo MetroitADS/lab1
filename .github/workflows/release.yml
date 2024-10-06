@@ -65,33 +65,55 @@ jobs:
             echo "::set-output name=deb_path::$(realpath "$DEB_FILE")"
           fi
 
-  release:
-    needs: [build_macos, build_ubuntu]
+  upload:
     runs-on: ubuntu-latest
+    needs: [build-linux, build-mac, build-win]
     steps:
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
+      - uses: actions/checkout@v1
+  
+      - name: Download linux artifact
+        uses: actions/download-artifact@master
         with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: linux
 
-      - name: Upload .pkg to Release
-        uses: softprops/action-gh-release@v1
+      - name: Download mac artifact
+        uses: actions/download-artifact@master
         with:
-          tag_name: v${{ github.run_number }}
-          files: ${{ needs.build_macos.outputs.pkg_path }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: mac
+ 
+      - name: Download win artifact
+        uses: actions/download-artifact@master
+        with:
+          name: win
 
-      - name: Upload .deb to Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ github.run_number }}
-          files: ${{ needs.build_ubuntu.outputs.deb_path }}
+    # Загрузка deb файла
+      - name: Upload to Release deb
+        uses: JasonEtco/upload-to-release@v0.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: linux/linux.deb application/vnd.debian.binary-package
+
+      # Загрузка AppImage
+      - name: Upload to Release AppImage
+        uses: JasonEtco/upload-to-release@v0.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: linux/linux.AppImage application/x-executable
+
+    # Загрузка pkg файла
+      - name: Upload to Release pkg
+        uses: JasonEtco/upload-to-release@v0.31.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: mac/mac.pkg application/x-xar
+
+    # Загрузка exe файла
+      - name: Upload to Release exe
+        uses: JasonEtco/upload-to-release@v0.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: win/win.exe application/octet-stream
