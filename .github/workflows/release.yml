@@ -76,8 +76,8 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ github.run_number }}  # Имя тега для релиза
-          release_name: Release ${{ github.run_number }}  # Название релиза
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
         env:
@@ -87,7 +87,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          files: ${{ needs.build_macos.outputs.pkg_path }} 
+          files: ${{ needs.build_macos.outputs.pkg_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -95,7 +95,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          files: ${{ needs.build_ubuntu.outputs.deb_path }}  
+          files: ${{ needs.build_ubuntu.outputs.deb_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
