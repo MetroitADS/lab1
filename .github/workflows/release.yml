@@ -24,35 +24,35 @@ jobs:
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
-
-      # Проверка на наличие .pkg файла
-      - name: Verify .pkg file creation
+      
+      - name: Check existing tags
+        id: check_tags
         run: |
-          echo "Current directory contents:"
-          ls -la ./
-          echo "Searching for .pkg files:"
-          find . -name "*.pkg"
+          TAG_EXISTS=$(git tag -l | grep "v${{ github.run_number }}")
+          echo "tag_exists=$TAG_EXISTS" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
+        if: env.tag_exists == ''
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }} # Используем формат тега
-          release_name: Release v${{ github.run_number }} # Используем формат названия релиза
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
           draft: false
           prerelease: false
 
       - name: Upload Release Asset for macOS
+        if: env.tag_exists == ''
         id: upload-release-asset-macos
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Путь к файлу для macOS
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Имя файла для macOS
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg
           asset_content_type: application/octet-stream
 
   build_ubuntu:
@@ -66,20 +66,18 @@ jobs:
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
 
-      # Run CPack to create the .deb package
       - name: Create Debian Package
         run: cpack -G DEB
 
-      # Проверка на наличие .deb файла
-      - name: Verify .deb file creation
+      - name: Check existing tags
+        id: check_tags
         run: |
-          echo "Current directory contents:"
-          ls -la ./
-          echo "Searching for .deb files:"
-          find . -name "*.deb"
+          TAG_EXISTS=$(git tag -l | grep "v${{ github.run_number }}")
+          echo "tag_exists=$TAG_EXISTS" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
+        if: env.tag_exists == ''
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,12 +88,13 @@ jobs:
           prerelease: false
 
       - name: Upload Release Asset for Linux
+        if: env.tag_exists == ''
         id: upload-release-asset-linux
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb  # Измените на ваше фактическое имя
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/octet-stream
