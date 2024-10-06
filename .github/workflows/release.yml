@@ -36,7 +36,6 @@ jobs:
           cd build
           cpack -G DEB || { echo "Package creation failed"; exit 1; }
           
-          # Убедитесь, что ../build_output - это каталог
           if [ -e ../build_output ]; then
               if [ ! -d ../build_output ]; then
                   echo "../build_output exists but is not a directory. Removing it."
@@ -52,6 +51,26 @@ jobs:
         with:
           name: ubuntu-package
           path: build_output/*.deb
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Release notes for version ${{ github.ref }}
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Debian package to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build_output/*.deb
+          asset_name: package.deb
+          asset_content_type: application/octet-stream
 
   build_macos:
     runs-on: macos-latest
@@ -88,53 +107,22 @@ jobs:
           name: macos-package
           path: build_output/*.pkg
 
-  release:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up environment
-        run: echo "Setting up environment for ${{ matrix.os }}"
-
-      - name: Build project
-        run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            echo "Building for Ubuntu"
-            # Ваши команды для сборки на Ubuntu
-          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            echo "Building for macOS"
-            # Ваши команды для сборки на macOS
-          fi
-
-      - name: List output directory after build
-        run: ls -R path/to/your/output/
-
-      - name: Package files
-        run: |
-          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            echo "Packaging Ubuntu files"
-            zip -r myapp-ubuntu.zip path/to/your/output/*
-          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            echo "Packaging macOS files"
-            zip -r myapp-macos.zip path/to/your/output/*
-          fi
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Create Release (macOS)
+        id: create_release_macos
+        uses: actions/create-release@v1
         with:
           tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
           body: |
-            Changes in this release:
-            - Add your changes here
-          files: |
-            myapp-ubuntu.zip
-            myapp-macos.zip
+            Release notes for version ${{ github.ref }}
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload macOS package to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release_macos.outputs.upload_url }}
+          asset_path: build_output/*.pkg
+          asset_name: package.pkg
+          asset_content_type: application/octet-stream
