@@ -102,38 +102,35 @@ jobs:
       - name: Set up environment
         run: |
           echo "Setting up environment for ${{ matrix.os }}"
-          # Здесь можно добавлять команды для установки зависимостей или настройки окружения
 
       - name: Build project
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            # Команды для сборки на Ubuntu
             echo "Building for Ubuntu"
-            # Например: make build
+            # Ваши команды для сборки на Ubuntu
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            # Команды для сборки на macOS
             echo "Building for macOS"
-            # Например: make build
+            # Ваши команды для сборки на macOS
           fi
       
+      - name: List files in the build directory
+        run: ls -R build # Обновите на ваш путь, где находятся собранные файлы
+
       - name: Package files
         run: |
-          # Здесь укажите команды для упаковки файлов, например:
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
-            # Упаковка для Ubuntu
             echo "Packaging Ubuntu files"
-            zip -r myapp-ubuntu.zip path/to/your/files
+            zip -r myapp-ubuntu.zip build/* # Обновите на ваш путь
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
-            # Упаковка для macOS
             echo "Packaging macOS files"
-            zip -r myapp-macos.zip path/to/your/files
+            zip -r myapp-macos.zip build/* # Обновите на ваш путь
           fi
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }} # Используйте имя тега как название релиза
+          name: Release ${{ github.ref }}
           body: |
             Changes in this release:
             - Add your changes here
@@ -141,4 +138,4 @@ jobs:
             myapp-ubuntu.zip
             myapp-macos.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Используйте встроенный токен
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
