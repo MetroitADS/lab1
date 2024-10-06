@@ -9,7 +9,6 @@ on:
 permissions:
   contents: write
   packages: write
-  releases: write  # Разрешение на создание релизов
 
 jobs:
   build_macos:
@@ -82,13 +81,13 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Токен для доступа к API GitHub
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload .pkg artifact to release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          files: ${{ jobs.build_macos.outputs.pkg_path }}
+          files: ${{ needs.build_macos.outputs.pkg_path }}  # Обращение к выходному значению другого job
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -96,6 +95,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ github.run_number }}
-          files: ${{ jobs.build_ubuntu.outputs.deb_path }}
+          files: ${{ needs.build_ubuntu.outputs.deb_path }}  # Обращение к выходному значению другого job
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
