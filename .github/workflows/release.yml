@@ -1,9 +1,14 @@
-name: Build and Release
+name: 'C++ CI'
 
 on:
   push:
-    tags:
-      - 'v*'  # Запускается при пуше тегов в формате v*
+    branches:
+      - main
+      - feature/github_actions
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   build_macos:
@@ -76,7 +81,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}  # Использует тег из события2
+          tag_name: ${{ github.ref }}  # Использует тег из события
           release_name: Release ${{ github.ref }}  # Название релиза
           draft: false
           prerelease: false
