@@ -55,7 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Путь к файлу .pkg для macOS
+          asset_path: ./build/helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Убедитесь, что путь правильный
           asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Имя файла .pkg для macOS
           asset_content_type: application/octet-stream
 
