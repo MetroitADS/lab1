@@ -83,15 +83,15 @@ jobs:
       - name: Upload .pkg to Release
         uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset: ${{ needs.build_macos.outputs.pkg_path }}
+          tag_name: v${{ github.run_number }}
+          files: ${{ needs.build_macos.outputs.pkg_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload .deb to Release
         uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset: ${{ needs.build_ubuntu.outputs.deb_path }}
+          tag_name: v${{ github.run_number }}
+          files: ${{ needs.build_ubuntu.outputs.deb_path }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
