@@ -103,14 +103,17 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }} # Использует текущий тег
-          release_name: Release ${{ github.ref }} # Название релиза
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }} # Убедитесь, что используете корректные названия параметров
           body: |
             Changes in this release:
-            - Example change.
-          files: ./build_output/*.txt # Путь к вашим файлам для упаковки
+            - your changes here
+          files: |
+            path/to/your/file1
+            path/to/your/file2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Download Ubuntu package
         uses: actions/download-artifact@v3
