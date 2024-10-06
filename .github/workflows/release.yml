@@ -102,9 +102,6 @@ jobs:
       - name: Set up environment
         run: echo "Setting up environment for ${{ matrix.os }}"
 
-      - name: List files before build
-        run: ls -R
-
       - name: Build project
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
@@ -115,17 +112,17 @@ jobs:
             # Ваши команды для сборки на macOS
           fi
 
-      - name: List files after build
-        run: ls -R
+      - name: List output directory after build
+        run: ls -R path/to/your/output/
 
       - name: Package files
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             echo "Packaging Ubuntu files"
-            zip -r myapp-ubuntu.zip path/to/your/output/* # Обновите на ваш фактический путь
+            zip -r myapp-ubuntu.zip path/to/your/output/*
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             echo "Packaging macOS files"
-            zip -r myapp-macos.zip path/to/your/output/* # Обновите на ваш фактический путь
+            zip -r myapp-macos.zip path/to/your/output/*
           fi
       
       - name: Create Release
