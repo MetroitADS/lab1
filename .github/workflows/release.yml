@@ -85,7 +85,11 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -d "{\"tag_name\":\"$TAG\", \"name\":\"Release $TAG\"}" \
             "https://api.github.com/repos/${{ github.repository }}/releases"
+      - name: Debug PKG_FILE_PATH
+        run: echo "PKG_FILE_PATH is ${{ env.PKG_FILE_PATH }}"
 
+      - name: Debug DEB_FILE_PATH
+        run: echo "DEB_FILE_PATH is ${{ env.DEB_FILE_PATH }}"
       - name: Upload Release Asset for macOS
         if: env.PKG_FILE_PATH != ''
         uses: actions/upload-release-asset@v1
