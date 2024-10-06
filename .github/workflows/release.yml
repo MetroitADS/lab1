@@ -75,8 +75,7 @@ jobs:
           TAG="v${{ github.run_number }}"
           echo "::set-output name=tag_name::$TAG"
           echo "::set-output name=release_name::Release $TAG"
-
-          # Check if the tag already exists
+          
           if git ls-remote --tags origin | grep -q "$TAG"; then
             echo "Tag $TAG already exists."
             exit 0
@@ -88,23 +87,24 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/releases"
 
       - name: Upload Release Asset for macOS
-        if: steps.set_pkg_path.outputs.pkg_path != ''
+        if: env.PKG_FILE_PATH != ''
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ needs.build_macos.outputs.pkg_path }}
-          asset_name: $(basename ${{ needs.build_macos.outputs.pkg_path }})
+          asset_path: ${{ env.PKG_FILE_PATH }}
+          asset_name: ${{ env.PKG_FILE_PATH }} # Используем полное имя
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset for Ubuntu
-        if: steps.set_deb_path.outputs.deb_path != ''
+        if: env.DEB_FILE_PATH != ''
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ needs.build_ubuntu.outputs.deb_path }}
-          asset_name: $(basename ${{ needs.build_ubuntu.outputs.deb_path }})
+          asset_path: ${{ env.DEB_FILE_PATH }}
+          asset_name: ${{ env.DEB_FILE_PATH }} # Используем полное имя
           asset_content_type: application/octet-stream
+
