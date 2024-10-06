@@ -93,16 +93,22 @@ jobs:
     needs: [build_ubuntu, build_macos]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
+
+      - name: Build project (пример)
+        run: |
+          mkdir -p build_output
+          echo "Hello, World!" > build_output/helloworld.txt
 
       - name: Create Release
-        id: create_release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }} # Используем тег, к которому произошел push
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          tag_name: ${{ github.ref }} # Использует текущий тег
+          release_name: Release ${{ github.ref }} # Название релиза
+          body: |
+            Changes in this release:
+            - Example change.
+          files: ./build_output/*.txt # Путь к вашим файлам для упаковки
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
