@@ -90,59 +90,55 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: [build_ubuntu, build_macos]
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest] # Указываем платформы для сборки
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Build project (пример)
+      - name: Set up environment
         run: |
-          mkdir -p build_output
-          echo "Hello, World!" > build_output/helloworld.txt
+          echo "Setting up environment for ${{ matrix.os }}"
+          # Здесь можно добавлять команды для установки зависимостей или настройки окружения
 
+      - name: Build project
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            # Команды для сборки на Ubuntu
+            echo "Building for Ubuntu"
+            # Например: make build
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            # Команды для сборки на macOS
+            echo "Building for macOS"
+            # Например: make build
+          fi
+      
+      - name: Package files
+        run: |
+          # Здесь укажите команды для упаковки файлов, например:
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            # Упаковка для Ubuntu
+            echo "Packaging Ubuntu files"
+            zip -r myapp-ubuntu.zip path/to/your/files
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            # Упаковка для macOS
+            echo "Packaging macOS files"
+            zip -r myapp-macos.zip path/to/your/files
+          fi
+      
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }} # Убедитесь, что используете корректные названия параметров
+          name: Release ${{ github.ref }} # Используйте имя тега как название релиза
           body: |
             Changes in this release:
-            - your changes here
+            - Add your changes here
           files: |
-            path/to/your/file1
-            path/to/your/file2
+            myapp-ubuntu.zip
+            myapp-macos.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-      - name: Download Ubuntu package
-        uses: actions/download-artifact@v3
-        with:
-          name: ubuntu-package
-          path: ./artifacts
-
-      - name: Upload Ubuntu package to release
-        uses: softprops/action-gh-release@v1
-        with:
-          upload_artifact: true
-          asset_path: artifacts/*.deb
-          asset_name: ubuntu-package.deb
-          tag: ${{ github.ref }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download macOS package
-        uses: actions/download-artifact@v3
-        with:
-          name: macos-package
-          path: ./artifacts
-
-      - name: Upload macOS package to release
-        uses: softprops/action-gh-release@v1
-        with:
-          upload_artifact: true
-          asset_path: artifacts/*.pkg
-          asset_name: macos-package.pkg
-          tag: ${{ github.ref }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Используйте встроенный токен
