@@ -26,15 +26,6 @@ jobs:
       - run: cmake --build .
       - run: cmake --build . --target package
 
-      # Проверка на наличие .pkg файла
-      - name: Verify .pkg file creation
-        id: verify_pkg
-        run: |
-          echo "Current directory contents:"
-          ls -la ./
-          echo "Searching for .pkg files:"
-          find . -name "*.pkg"
-
       - name: Set .pkg file path
         id: set_pkg_path
         run: |
@@ -43,7 +34,7 @@ jobs:
             echo "No .pkg file found."
             exit 1
           else
-            echo "PKG_FILE_PATH=$(realpath "$PKG_FILE")" >> $GITHUB_ENV
+            echo "pkg_path=$(realpath "$PKG_FILE")" >> $GITHUB_ENV
             echo "::set-output name=pkg_path::$(realpath "$PKG_FILE")"
           fi
 
@@ -59,19 +50,8 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
-
-      # Run CPack to create the .deb package
       - name: Create Debian Package
         run: cpack -G DEB
-
-      # Проверка на наличие .deb файла
-      - name: Verify .deb file creation
-        id: verify_deb
-        run: |
-          echo "Current directory contents:"
-          ls -la ./
-          echo "Searching for .deb files:"
-          find . -name "*.deb"
 
       - name: Set .deb file path
         id: set_deb_path
@@ -81,7 +61,7 @@ jobs:
             echo "No .deb file found."
             exit 1
           else
-            echo "DEB_FILE_PATH=$(realpath "$DEB_FILE")" >> $GITHUB_ENV
+            echo "deb_path=$(realpath "$DEB_FILE")" >> $GITHUB_ENV
             echo "::set-output name=deb_path::$(realpath "$DEB_FILE")"
           fi
 
@@ -90,12 +70,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create Release
-        id: create_release 
+        id: create_release
         run: |
           TAG="v${{ github.run_number }}"
           echo "::set-output name=tag_name::$TAG"
           echo "::set-output name=release_name::Release $TAG"
-      
+
+          # Check if the tag already exists
           if git ls-remote --tags origin | grep -q "$TAG"; then
             echo "Tag $TAG already exists."
             exit 0
@@ -113,8 +94,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.set_pkg_path.outputs.pkg_path }}
-          asset_name: $(basename ${{ steps.set_pkg_path.outputs.pkg_path }})
+          asset_path: ${{ needs.build_macos.outputs.pkg_path }}
+          asset_name: $(basename ${{ needs.build_macos.outputs.pkg_path }})
           asset_content_type: application/octet-stream
 
       - name: Upload Release Asset for Ubuntu
@@ -124,6 +105,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.set_deb_path.outputs.deb_path }}
-          asset_name: $(basename ${{ steps.set_deb_path.outputs.deb_path }})
+          asset_path: ${{ needs.build_ubuntu.outputs.deb_path }}
+          asset_name: $(basename ${{ needs.build_ubuntu.outputs.deb_path }})
           asset_content_type: application/octet-stream
