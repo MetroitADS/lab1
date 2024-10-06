@@ -93,15 +93,17 @@ jobs:
     
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest] # Указываем платформы для сборки
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up environment
-        run: |
-          echo "Setting up environment for ${{ matrix.os }}"
+        run: echo "Setting up environment for ${{ matrix.os }}"
+
+      - name: List files before build
+        run: ls -R
 
       - name: Build project
         run: |
@@ -112,18 +114,18 @@ jobs:
             echo "Building for macOS"
             # Ваши команды для сборки на macOS
           fi
-      
-      - name: List files in the build directory
-        run: ls -R build # Обновите на ваш путь, где находятся собранные файлы
+
+      - name: List files after build
+        run: ls -R
 
       - name: Package files
         run: |
           if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
             echo "Packaging Ubuntu files"
-            zip -r myapp-ubuntu.zip build/* # Обновите на ваш путь
+            zip -r myapp-ubuntu.zip path/to/your/output/* # Обновите на ваш фактический путь
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             echo "Packaging macOS files"
-            zip -r myapp-macos.zip build/* # Обновите на ваш путь
+            zip -r myapp-macos.zip path/to/your/output/* # Обновите на ваш фактический путь
           fi
       
       - name: Create Release
