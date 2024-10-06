@@ -35,7 +35,7 @@ jobs:
             exit 1
           else
             echo "pkg_path=$(realpath "$PKG_FILE")" >> $GITHUB_ENV
-            echo "::set-output name=pkg_path::$(realpath "$PKG_FILE")"
+            echo "pkg_path=$(realpath "$PKG_FILE")" >> $GITHUB_OUTPUT
           fi
 
   build_ubuntu:
@@ -62,7 +62,7 @@ jobs:
             exit 1
           else
             echo "deb_path=$(realpath "$DEB_FILE")" >> $GITHUB_ENV
-            echo "::set-output name=deb_path::$(realpath "$DEB_FILE")"
+            echo "deb_path=$(realpath "$DEB_FILE")" >> $GITHUB_OUTPUT
           fi
 
   release:
