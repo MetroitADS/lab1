@@ -13,65 +13,37 @@ permissions:
 jobs:
   build_macos:
     runs-on: macos-latest
+    outputs:
+      pkg_path: ${{ steps.upload-release-asset-macos.outputs.asset_path }}
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
 
-      - run: brew update && brew install boost # Установка Boost через Homebrew
+      - run: brew update && brew install boost
 
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
-      - run: cmake --build . --target test
       - run: cmake --build . --target package
 
       # Проверка на наличие .pkg файла
       - name: Verify .pkg file creation
+        id: verify_pkg
         run: |
           echo "Current directory contents:"
           ls -la ./
           echo "Searching for .pkg files:"
           find . -name "*.pkg"
 
-      # Check if the tag already exists
-      - name: Check if tag exists
-        id: check_tag
+      - name: Set .pkg file path
+        id: set_pkg_path
         run: |
-          TAG="v${{ github.run_number }}"
-          if git ls-remote --tags origin | grep -q "$TAG"; then
-            echo "Tag $TAG already exists."
-            echo "::set-output name=tag_exists::true"
-          else
-            echo "Tag $TAG does not exist."
-            echo "::set-output name=tag_exists::false"
-          fi
-
-      - name: Create Release
-        id: create_release
-        if: steps.check_tag.outputs.tag_exists == 'false'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset for macOS
-        id: upload-release-asset-macos
-        if: steps.check_tag.outputs.tag_exists == 'false'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Путь к файлу для macOS
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Имя файла для macOS
-          asset_content_type: application/octet-stream
+          echo "PKG_FILE_PATH=$(find . -name "*.pkg")" >> $GITHUB_ENV
 
   build_ubuntu:
     runs-on: ubuntu-latest
+    outputs:
+      deb_path: ${{ steps.upload-release-asset-linux.outputs.asset_path }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -87,30 +59,57 @@ jobs:
 
       # Проверка на наличие .deb файла
       - name: Verify .deb file creation
+        id: verify_deb
         run: |
           echo "Current directory contents:"
           ls -la ./
           echo "Searching for .deb files:"
           find . -name "*.deb"
 
+      - name: Set .deb file path
+        id: set_deb_path
+        run: |
+          echo "DEB_FILE_PATH=$(find . -name '*.deb')" >> $GITHUB_ENV
+
+  release:
+    needs: [build_macos, build_ubuntu]
+    runs-on: ubuntu-latest
+    steps:
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
-          draft: false
-          prerelease: false
+        run: |
+          TAG="v${{ github.run_number }}"
+          echo "::set-output name=tag_name::$TAG"
+          echo "::set-output name=release_name::Release $TAG"
+          
+          if git ls-remote --tags origin | grep -q "$TAG"; then
+            echo "Tag $TAG already exists."
+            exit 0
+          fi
 
-      - name: Upload Release Asset for Linux
-        id: upload-release-asset-linux
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -d "{\"tag_name\":\"$TAG\", \"name\":\"Release $TAG\"}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases"
+
+      - name: Upload Release Asset for macOS
+        if: env.PKG_FILE_PATH != ''
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb  # Измените на ваше фактическое имя
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ${{ env.PKG_FILE_PATH }} 
+          asset_name: $(basename ${{ env.PKG_FILE_PATH }})  
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset for Linux
+        if: env.DEB_FILE_PATH != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.DEB_FILE_PATH }} 
+          asset_name: $(basename ${{ env.DEB_FILE_PATH }})
           asset_content_type: application/octet-stream
