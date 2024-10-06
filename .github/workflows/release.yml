@@ -11,43 +11,38 @@ permissions:
   packages: write
 
 jobs:
-  build_macos:
+  build:
     runs-on: macos-latest
-    permissions: write-all
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up CMake
+        uses: jwlawson/actions-setup-cmake@v1.0.2
         with:
-          submodules: true
-      - run: brew update && brew install boost # Установка Boost через Homebrew
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build .
-      - run: cmake --build . --target test
+          cmake-version: '3.20'  # Укажите желаемую версию CMake
 
-      # Создание macOS пакета
-      - name: Package for macOS
-        run: cmake --build . --target package
-      
-      # Проверка наличия .pkg файлов после сборки
-      - name: List .pkg files
-        run: |
-          echo "Current directory contents:"
-          ls -la
-          echo "Searching for .pkg files:"
-          find . -name "*.pkg"
+      - name: Configure CMake
+        run: cmake -S . -B build
 
-      # Создание релиза для macOS
+      - name: Build
+        run: cmake --build build --target package  # Предполагается, что вы настроили CMake для создания пакета
+
+      - name: List files in build directory
+        run: ls -la build  # Проверка наличия созданного пакета
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }} # Устанавливаем номер тега
-          release_name: Release v${{ github.run_number }} # Название релиза
+          tag_name: ${{ github.ref }}  # Использует тег из события
+          release_name: Release ${{ github.ref }}  # Название релиза
           draft: false
           prerelease: false
 
-      # Загрузка артефакта для macOS
       - name: Upload macOS Release Asset
         id: upload-macos-asset
         uses: actions/upload-release-asset@v1
@@ -55,8 +50,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Убедитесь, что путь правильный
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # Имя файла .pkg для macOS
+          asset_path: ./build/helloworld-0.0.${{ github.run_number }}-Darwin.pkg  # Проверьте правильность имени файла
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg  # Имя файла .pkg для macOS
           asset_content_type: application/octet-stream
 
   build_ubuntu:
