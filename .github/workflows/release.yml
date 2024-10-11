@@ -27,7 +27,7 @@ jobs:
         run: cmake -S . -B build
 
       - name: Build
-        run: cmake --build build --target package  # Предполагается, что вы настроили CMake для создания пакета
+        run: cmake --build build --target package  # Предполагается, что вы настроили CMake для создания пакетаs
 
       - name: List files in build directory
         run: ls -la build  # Проверка наличия созданного пакета
