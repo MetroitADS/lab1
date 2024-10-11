@@ -1,4 +1,4 @@
-name: 'C++ CI'
+п»їname: 'C++ CI'
 
 on:
   push:
@@ -13,36 +13,41 @@ permissions:
 jobs:
   build_macos:
     runs-on: macos-latest
-
+    permissions: write-all
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1.0.2
+      - uses: actions/checkout@v3
         with:
-          cmake-version: '3.20'  # Укажите желаемую версию CMake
+          submodules: true
+      - run: brew update && brew install boost # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Boost пїЅпїЅпїЅпїЅпїЅ Homebrew
+      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
+      - run: cmake --build .
+      - run: cmake --build . --target test
 
-      - name: Configure CMake
-        run: cmake -S . -B build
+      # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ macOS пїЅпїЅпїЅпїЅпїЅпїЅ
+      - name: Package for macOS
+        run: cmake --build . --target package
+      
+      # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ .pkg пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+      - name: List .pkg files
+        run: |
+          echo "Current directory contents:"
+          ls -la
+          echo "Searching for .pkg files:"
+          find . -name "*.pkg"
 
-      - name: Build
-        run: cmake --build build --target package  # Предполагается, что вы настроили CMake для создания пакетаs
-
-      - name: List files in build directory
-        run: ls -la build  # Проверка наличия созданного пакета
-
+      # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ macOS
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}  # Использует тег из события
-          release_name: Release ${{ github.ref }}  # Название релиза
+          tag_name: v${{ github.run_number }} # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+          release_name: Release v${{ github.run_number }} # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
           draft: false
           prerelease: false
 
+      # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ macOS
       - name: Upload macOS Release Asset
         id: upload-macos-asset
         uses: actions/upload-release-asset@v1
@@ -50,49 +55,51 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/helloworld-0.0.${{ github.run_number }}-Darwin.pkg  # Проверьте правильность имени файла
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg  # Имя файла .pkg для macOS
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ .pkg пїЅпїЅпїЅ macOS
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ .pkg пїЅпїЅпїЅ macOS
           asset_content_type: application/octet-stream
 
   build_ubuntu:
     runs-on: ubuntu-latest
-
+    needs: build_macos # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ macOS пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Ubuntu
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up CMake
-        uses: jwlawson/actions-setup-cmake@v1.0.2
+      - uses: actions/checkout@v3
         with:
-          cmake-version: '3.20'  # Укажите желаемую версию CMake
+          submodules: true
+      - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
+      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
+      - run: cmake --build .
 
-      - name: Configure CMake
-        run: cmake -S . -B build
-
-      - name: Build
-        run: cmake --build build --target package  # Предполагается, что вы настроили CMake для создания пакета
-
-      - name: List files in build directory
-        run: ls -la build  # Проверка наличия созданного пакета
-
+      # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Debian пїЅпїЅпїЅпїЅпїЅпїЅ
+      - name: Create Debian Package
+        run: cpack -G DEB
+      
+      # пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ .deb пїЅпїЅпїЅпїЅпїЅ
+      - name: Verify .deb file creation
+        run: |
+          echo "Current directory contents:"
+          ls -la ./
+          echo "Searching for .deb files:"
+          find . -name "*.deb"
+      
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}  # Использует тег из события
-          release_name: Release ${{ github.ref }}  # Название релиза
+          tag_name: v${{ github.run_id }}
+          release_name: Release v${{ github.run_id }}
           draft: false
           prerelease: false
-
-      - name: Upload Ubuntu Release Asset
-        id: upload-ubuntu-asset
+      
+      - name: Upload Linux Release Asset
+        id: upload-linux-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/helloworld-0.0.${{ github.run_number }}-Linux.deb  # Проверьте правильность имени файла
-          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb  # Имя файла .deb для Ubuntu
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/octet-stream
