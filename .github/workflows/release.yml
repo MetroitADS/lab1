@@ -6,100 +6,73 @@ on:
       - main
       - feature/github_actions
 
-permissions:
-  contents: write
-  packages: write
-
 jobs:
-  build_macos:
-    runs-on: macos-latest
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
     permissions: write-all
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - run: brew update && brew install boost # ��������� Boost ����� Homebrew
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
-      - run: cmake --build .
-      - run: cmake --build . --target test
-
-      # �������� macOS ������
-      - name: Package for macOS
-        run: cmake --build . --target package
-      
-      # �������� ������� .pkg ������ ����� ������
-      - name: List .pkg files
-        run: |
-          echo "Current directory contents:"
-          ls -la
-          echo "Searching for .pkg files:"
-          find . -name "*.pkg"
-
-      # �������� ������ ��� macOS
-      - name: Create Release
+      - name: Create release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ github.run_number }} # ������������� ����� ����
-          release_name: Release v${{ github.run_number }} # �������� ������
+          tag_name: ${{ github.run_number}}
+          release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
 
-      # �������� ��������� ��� macOS
-      - name: Upload macOS Release Asset
-        id: upload-macos-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.pkg # ���� � ����� .pkg ��� macOS
-          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.pkg # ��� ����� .pkg ��� macOS
-          asset_content_type: application/octet-stream
-
-  build_ubuntu:
+  release_assets_ubuntu:
+    name: Release assets
+    needs: create_release
     runs-on: ubuntu-latest
-    needs: build_macos # ���������, ��� ������ macOS ��������� ����� ������� ������ Ubuntu
+    permissions: write-all
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           submodules: true
       - run: sudo apt-get update && sudo apt-get install libboost-test-dev -y
       - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
       - run: cmake --build .
-
-      # �������� Debian ������
-      - name: Create Debian Package
-        run: cpack -G DEB
-      
-      # �������� �������� .deb �����
-      - name: Verify .deb file creation
-        run: |
-          echo "Current directory contents:"
-          ls -la ./
-          echo "Searching for .deb files:"
-          find . -name "*.deb"
-      
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ github.run_id }}
-          release_name: Release v${{ github.run_id }}
-          draft: false
-          prerelease: false
-      
-      - name: Upload Linux Release Asset
-        id: upload-linux-asset
+      - run: cmake --build . --target test
+      - run: cmake --build . --target package
+      - name: Upload release assets
+        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          upload_url: ${{ needs.create_release.outputs.upload_url}}
           asset_name: helloworld-0.0.${{ github.run_number }}-Linux.deb
-          asset_content_type: application/octet-stream
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/vnd.debian.binary-package
+
+  release_assets_macos:
+    name: Release assets
+    needs: create_release
+    runs-on: macos-latest
+    permissions: write-all 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - run: brew install boost
+      - run: cmake . -DPATCH_VERSION=${{ github.run_number }}
+      - run: cmake --build .
+      - run: cmake --build . --target test
+      - run: cmake --build . --target package
+      - name: Upload release assets
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN}}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url}}
+          asset_name: helloworld-0.0.${{ github.run_number }}-Darwin.zip
+          asset_path: ./helloworld-0.0.${{ github.run_number }}-Darwin.zip
+          asset_content_type: application/zip
