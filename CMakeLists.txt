@@ -52,7 +52,7 @@ if(APPLE)
 elseif(UNIX)
     set(CPACK_GENERATOR "DEB")  # DEB для Linux
 else()
-    set(CPACK_GENERATOR "ZIP")  # ZIP для Windows
+    set(CPACK_GENERATOR "ZIP")  # ZIP для Windows2
 endif()
 
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
